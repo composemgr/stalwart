@@ -1,0 +1,27 @@
+# nginx proxy address - http://172.17.0.1:8091
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "5m"
+    max-file: "1"
+
+services:
+  stalwart:
+    image: stalwartlabs/mail-server:latest
+    container_name: stalwart-app
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - stalwart
+    ports:
+      - "8091:8080"
+    environment:
+      TZ: ${TZ:-America/New_York}
+    volumes:
+      - ./rootfs/config/stalwart:/config
+      - ./rootfs/data/stalwart:/data
+
+networks:
+  stalwart:
+    external: false
