@@ -19,8 +19,8 @@ services:
     environment:
       TZ: ${TZ:-America/New_York}
     volumes:
-      - ./rootfs/config/stalwart:/config
-      - ./rootfs/data/stalwart:/data
+      - ./volumes/config/stalwart:/config
+      - ./volumes/data/stalwart:/data
 
 networks:
   stalwart:
