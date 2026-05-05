@@ -45,8 +45,8 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/config/stalwart` - Data storage
-- `./rootfs/data/stalwart` - Data storage
+- `./volumes/config/stalwart` - Data storage
+- `./volumes/data/stalwart` - Data storage
 
 ## 🔍 Logging
 
