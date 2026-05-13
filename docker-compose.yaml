@@ -1,5 +1,6 @@
 # nginx proxy address - http://172.17.0.1:8091
 
+name: stalwart
 x-logging: &default-logging
   driver: json-file
   options:
@@ -7,21 +8,30 @@ x-logging: &default-logging
     max-file: "1"
 
 services:
-  stalwart:
+  app:
     image: stalwartlabs/mail-server:latest
+    pull_policy: always
     container_name: stalwart-app
-    restart: unless-stopped
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
     logging: *default-logging
     networks:
       - stalwart
     ports:
-      - "8091:8080"
+      - "172.17.0.1:8091:8080"
+      - "25:25/tcp"
+      - "465:465/tcp"
+      - "587:587/tcp"
+      - "143:143/tcp"
+      - "993:993/tcp"
+      - "4190:4190/tcp"
     environment:
       TZ: ${TZ:-America/New_York}
     volumes:
-      - ./volumes/config/stalwart:/config
-      - ./volumes/data/stalwart:/data
+      - ./volumes/config/stalwart:/opt/stalwart-mail/etc
+      - ./volumes/data/stalwart:/opt/stalwart-mail/data
 
 networks:
   stalwart:
+    name: stalwart
     external: false
