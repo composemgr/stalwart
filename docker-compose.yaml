@@ -29,6 +29,8 @@ services:
       - "4190:4190/tcp"
     environment:
       TZ: ${TZ:-America/New_York}
+      STALWART_PUBLIC_URL: https://${BASE_HOST_NAME:-$HOSTNAME}.${BASE_DOMAIN_NAME:-example.com}
+      STALWART_RECOVERY_ADMIN: ${APP_ADMIN_USER:-admin}:${APP_ADMIN_PASS:-changeme_admin_password}
       CONTAINER_NAME: stalwart-app
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     volumes:
