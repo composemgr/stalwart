@@ -17,6 +17,8 @@ services:
     logging: *default-logging
     networks:
       - stalwart
+      - proxy
+      - cloudflare
     ports:
       - "172.17.0.1:8091:8080"
       - "25:25/tcp"
@@ -27,11 +29,33 @@ services:
       - "4190:4190/tcp"
     environment:
       TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: stalwart-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     volumes:
       - ./volumes/config/stalwart:/opt/stalwart-mail/etc
       - ./volumes/data/stalwart:/opt/stalwart-mail/data
+    labels:
+      - 'traefik.enable=true'
+      - 'cloudflare.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'cloudflare.service=http://stalwart-app:8080'
+      - 'cloudflare.hostname=stalwart.${CLOUDFLARE_ZONE_NAME:-}'
+      - 'traefik.http.routers.stalwart-app.entrypoints=http'
+      - 'traefik.http.routers.stalwart-app-secure.tls=true'
+      - 'traefik.http.routers.stalwart-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.middlewares.stalwart-app-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.stalwart-app.middlewares=stalwart-app-https-redirect'
+      - 'traefik.http.routers.stalwart-app-secure.entrypoints=https'
+      - 'traefik.http.routers.stalwart-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.routers.stalwart-app-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.stalwart-app-secure.service=stalwart-app'
+      - 'traefik.http.services.stalwart-app.loadbalancer.server.port=8080'
 
 networks:
   stalwart:
     name: stalwart
     external: false
+  proxy:
+    external: true
+  cloudflare:
+    external: true
