@@ -1,0 +1,49 @@
+# nginx proxy address - http://172.17.0.1:64352
+
+name: stalwart
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  app:
+    image: stalwartlabs/mail-server:latest
+    container_name: stalwart-app
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: stalwart-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      STALWART_PUBLIC_URL: https://${BASE_HOST_NAME:-$HOSTNAME}
+      STALWART_RECOVERY_ADMIN: ${APP_ADMIN_USER:-admin}:${APP_ADMIN_PASS:-replace-with-a-random-password}
+    volumes:
+      - './volumes/config/stalwart:/opt/stalwart-mail/etc:z'
+      - './volumes/data/stalwart:/opt/stalwart-mail/data:z'
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=traefik'
+      - 'traefik.http.routers.stalwart-app.entrypoints=http'
+      - 'traefik.http.routers.stalwart-app.rule=Host(`${BASE_HOST_NAME:-$HOSTNAME}`)'
+      - 'traefik.http.routers.stalwart-app.middlewares=stalwart-app-https-redirect'
+      - 'traefik.http.middlewares.stalwart-app-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.stalwart-app-secure.entrypoints=https'
+      - 'traefik.http.routers.stalwart-app-secure.rule=Host(`${BASE_HOST_NAME:-$HOSTNAME}`)'
+      - 'traefik.http.routers.stalwart-app-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.stalwart-app-secure.service=stalwart-app'
+      - 'traefik.http.services.stalwart-app.loadbalancer.server.port=8080'
+    networks:
+      - stalwart
+      - traefik
+
+networks:
+  stalwart:
+    name: stalwart
+    external: false
+  traefik:
+    external: true

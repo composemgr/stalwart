@@ -1,0 +1,41 @@
+# nginx proxy address - http://172.17.0.1:64352
+
+name: stalwart
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  app:
+    image: stalwartlabs/mail-server:latest
+    container_name: stalwart-app
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: stalwart-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      STALWART_PUBLIC_URL: https://${BASE_HOST_NAME:-$HOSTNAME}
+      STALWART_RECOVERY_ADMIN: ${APP_ADMIN_USER:-admin}:${APP_ADMIN_PASS:-replace-with-a-random-password}
+    volumes:
+      - './volumes/config/stalwart:/opt/stalwart-mail/etc:z'
+      - './volumes/data/stalwart:/opt/stalwart-mail/data:z'
+    labels:
+      - 'cloudflare.enable=true'
+      - 'cloudflare.service=http://stalwart-app:8080'
+      - 'cloudflare.hostname=${BASE_HOST_NAME:-$HOSTNAME}'
+    networks:
+      - stalwart
+      - cloudflare
+
+networks:
+  stalwart:
+    name: stalwart
+    external: false
+  cloudflare:
+    external: true
