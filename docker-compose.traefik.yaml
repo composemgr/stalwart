@@ -9,22 +9,32 @@ x-logging: &default-logging
 
 services:
   app:
-    image: stalwartlabs/mail-server:latest
+    image: stalwartlabs/stalwart:latest
     container_name: stalwart-app
     domainname: ${BASE_DOMAIN_NAME:-example.com}
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     pull_policy: always
     logging: *default-logging
+    user: '0:0'
     environment:
       TZ: ${TZ:-America/New_York}
       CONTAINER_NAME: stalwart-app
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
       STALWART_PUBLIC_URL: https://${BASE_HOST_NAME:-$HOSTNAME}
       STALWART_RECOVERY_ADMIN: ${APP_ADMIN_USER:-admin}:${APP_ADMIN_PASS:-replace-with-a-random-password}
+    ports:
+      - '25:25'
+      - '465:465'
+      - '587:587'
+      - '143:143'
+      - '993:993'
+      - '110:110'
+      - '995:995'
+      - '4190:4190'
     volumes:
-      - './volumes/config/stalwart:/opt/stalwart-mail/etc:z'
-      - './volumes/data/stalwart:/opt/stalwart-mail/data:z'
+      - './volumes/config/stalwart:/etc/stalwart:z'
+      - './volumes/data/stalwart:/var/lib/stalwart:z'
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=traefik'
@@ -37,6 +47,12 @@ services:
       - 'traefik.http.routers.stalwart-app-secure.tls.certresolver=cloudflare'
       - 'traefik.http.routers.stalwart-app-secure.service=stalwart-app'
       - 'traefik.http.services.stalwart-app.loadbalancer.server.port=8080'
+    healthcheck:
+      test: ['CMD', 'curl', '-fs', 'http://127.0.0.1:8080/healthz/live']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     networks:
       - stalwart
       - traefik

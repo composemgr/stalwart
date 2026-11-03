@@ -12,7 +12,7 @@ that web port; mail protocol ports are not exposed by this fleet convention.
 
 ## 🚀 Services
 
-- **app**: stalwartlabs/mail-server:latest
+- **app**: stalwartlabs/stalwart:latest
 
 ### Infrastructure Components
 
@@ -99,9 +99,9 @@ protocol access therefore requires a separate deployment or port mapping.
 ## 📂 Volumes
 
 - `./volumes/config/stalwart` - Stalwart configuration, mounted at
-  `/opt/stalwart-mail/etc`
+  `/etc/stalwart`
 - `./volumes/data/stalwart` - Mail store, blobs and queue, mounted at
-  `/opt/stalwart-mail/data`
+  `/var/lib/stalwart`
 
 ## 🔐 Security
 
